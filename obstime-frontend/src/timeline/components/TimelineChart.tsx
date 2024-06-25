@@ -3,6 +3,9 @@ import { XYPlot, LineSeries, VerticalGridLines, HorizontalGridLines, XAxis, YAxi
 import 'react-vis/dist/style.css';
 import './TimelineChart.css';
 
+/**
+ * Component to show the metrics in a chart.
+ */
 const TimelineChart = ({ data }: any) => {
   const [crosshairValues, setCrosshairValues] = useState<any>([]);
 

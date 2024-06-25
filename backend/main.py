@@ -13,8 +13,9 @@ app = Quart(__name__)
 app = cors(app, allow_origin="*")
 
 # Configure MongoDB Atlas
-client = AsyncIOMotorClient(f"mongodb+srv://{os.getenv('MONGO_USERNAME')}:{os.getenv('MONGO_PASSWORD')}@cluster0.tnmlf87.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = AsyncIOMotorClient(os.getenv('MONGO_CONNECTION_STRING'))
 db = client.myDatabase
+
 
 '''
 	POST endpoint for metric
