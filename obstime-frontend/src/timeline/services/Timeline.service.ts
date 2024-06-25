@@ -19,8 +19,8 @@ export async function fetchTimelineData(
 ): Promise<TimelineResponse> {
   const options = { method: "GET" };
   const searchParams = new URLSearchParams({
-    start: start.toISOString(),
-    end: end.toISOString(),
+    start: start.toISOString().split('.')[0],
+    end: end.toISOString().split('.')[0],
     granularity: IntervalGranularityMap[interval],
   });
 

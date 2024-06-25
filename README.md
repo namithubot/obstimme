@@ -47,7 +47,8 @@ Storing the data in the Mongo in the format
 	"name": metric_name,
 	"value": metric_val,
 	"timestamp":timestamp,
-	"metadata":{"name":metric_name}
+	"metadata":{"name":metric_name
+	}
 }
 ```
 
@@ -76,3 +77,9 @@ There's no kubernetes integration to the system.
 #### Frontend
 Frontend is written in react with `react-vis` package to visualize the timeline data. The UI is pretty basic with least amount of styling. For a better approach, it may be wise to do good amount of styling with a design system like Ant Design and use a powerful package like `d3.js` to show a chart or timeline data.
 
+## Planned but not implemented
+- Max min value of the metric
+- Restricting the start and end date to certain values
+- Corner cases when the value of end and start date is at extremes
+- Name style restriction
+- Value to be of certain types only

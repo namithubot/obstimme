@@ -85,6 +85,10 @@ async def get_average():
     except ValueError:
         return jsonify({'error': 'Invalid start or end parameter'}), 400
 
+	if start > end:
+		return jsonify({'error': 'Invalid start or end parameter'}), 400
+
+
     # Determine the format string for granularity
     if granularity == 'minutes':
         group_id = {
