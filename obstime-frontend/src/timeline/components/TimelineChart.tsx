@@ -1,22 +1,10 @@
-import React, { useState } from "react";
-import {
-  XYPlot,
-  LineSeries,
-  VerticalGridLines,
-  HorizontalGridLines,
-  XAxis,
-  YAxis,
-  DiscreteColorLegend,
-  Crosshair,
-} from "react-vis";
-import "react-vis/dist/style.css";
 import "./TimelineChart.css";
+import Chart from "react-google-charts";
 
 /**
  * Component to show the metrics in a chart.
  */
 const TimelineChart = ({ data }: any) => {
-  const [crosshairValues, setCrosshairValues] = useState<any>([]);
 
   const items = data?.map((item: any) => ({
     x: new Date(item.timestamp),
@@ -24,34 +12,31 @@ const TimelineChart = ({ data }: any) => {
     title: item.name,
   }));
 
+  
+  const chartData = [
+    ...[['Time', 'Value']],
+    ...items?.map((item: any) => [item.x, item.y])
+  ];
+
+  const options = {
+    title: "Metric Vizualizer",
+    curveType: "function",
+    series: [{ color: "#E7711B" }],
+    intervals: { style: "area" },
+    legend: "none",
+  };
+
   return (
     <div>
       {data?.length ? (
         <>
-          <XYPlot
-            width={800}
-            height={400}
-            onMouseLeave={() => setCrosshairValues([])}
-          >
-            <VerticalGridLines />
-            <HorizontalGridLines />
-            <XAxis
-              title="Timestamp"
-              tickFormat={(v) => new Date(v).toLocaleString()}
-              tickTotal={5}
-            />
-            <YAxis title="Metric Value" />
-            <LineSeries
-              data={items}
-              onNearestX={(datapoint, event) => setCrosshairValues([datapoint])}
-            />
-            <DiscreteColorLegend
-              items={[{ title: "Metric" }]}
-              orientation="horizontal"
-              className="timeline-legend"
-            />
-            <Crosshair values={crosshairValues} />
-          </XYPlot>
+          <Chart
+            chartType="LineChart"
+            width="100%"
+            height="400px"
+            data={chartData}
+            options={options}
+          />
         </>
       ) : (
         <div>No Data Available</div>

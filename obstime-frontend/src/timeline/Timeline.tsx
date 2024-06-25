@@ -1,4 +1,3 @@
-import "react-vis/dist/style.css";
 import TimelineChart from "./components/TimelineChart";
 import { Interval } from "./models/constants";
 import { useEffect, useState } from "react";
@@ -62,6 +61,7 @@ const Timeline = () => {
             <label>
               Start Date:
               <input
+			  	className="timeline-option"
                 type={timeInterval === Interval.DAYS ? "date" : "datetime-local"}
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
@@ -70,6 +70,7 @@ const Timeline = () => {
             <label>
               End Date:
               <input
+			  	className="timeline-option"
                 type={timeInterval === Interval.DAYS ? "date" : "datetime-local"}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
