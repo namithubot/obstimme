@@ -42,8 +42,18 @@ The database used is MongoDB. InfluxDB was also explored for the application as 
 We used basic timeseries functionality like grouping and averaging based on granularity. There's an easy migration guide to move the data to full fledged time series database, but that won't be required because of flexibility and scalability that MongoDB offers.
 
 Storing the data in the Mongo in the format
-
 ```
+{
+	"name": metric_name,
+	"value": metric_val,
+	"timestamp":timestamp,
+	"metadata":{"name":metric_name}
+}
+```
+
+Example store:
+```
+{"_id":{"$oid":"667a822b65e3671676c57673"},"name":"tat","value":{"$numberInt":"15"},"timestamp":{"$date":{"$numberLong":"1719304747949"}},"metadata":{"name":"tat"}}
 ```
 
 #### API/Middleware
@@ -55,6 +65,11 @@ There are 3 APIs:
 - GET /metrics/list List all available metric
 
 A yaml spec is provided in `backend/metrics.yaml`. The spec is following swagger standards.
+
+To run with the container
+```
+$ cd backend && docker compose up
+```
 
 There's no kubernetes integration to the system.
 

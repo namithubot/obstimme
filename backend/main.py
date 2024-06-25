@@ -13,30 +13,47 @@ app = Quart(__name__)
 app = cors(app, allow_origin="*")
 
 # Configure MongoDB Atlas
-client = AsyncIOMotorClient(os.getenv('MONGO_CONNECTION_STRING'))
+client = AsyncIOMotorClient(f"mongodb+srv://{os.getenv('MONGO_USERNAME')}:{os.getenv('MONGO_PASSWORD')}@cluster0.tnmlf87.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 db = client.myDatabase
 
+# Create time series collection if it does not exist
+async def create_time_series_collection():
+    collection_names = await db.list_collection_names()
+    if "metrics" not in collection_names:
+        await db.create_collection(
+            "metrics",
+            timeseries={
+                "timeField": "timestamp",
+                "metaField": "metadata",
+                "granularity": "seconds"
+            }
+        )
+
+@app.before_serving
+async def before_serving():
+    await create_time_series_collection()
 
 '''
-	POST endpoint for metric
-	Takes metrics in form [{ 'name': metric_name, 'value': metric_value }]
-	Stores it in the database
+    POST endpoint for metric
+    Takes metrics in form [{ 'name': metric_name, 'value': metric_value }]
+    Stores it in the database
 '''
 @app.route('/metrics', methods=['POST'])
 async def add_metrics():
     try:
         metrics = await request.get_json()
-        
+
         # Ensure metrics is a list
         if not isinstance(metrics, list):
             return jsonify({'error': 'Expected a list of metrics'}), 400
-        
+
         # Validate each metric
         for metric in metrics:
             if 'name' not in metric or 'value' not in metric:
                 return jsonify({'error': 'Each metric must contain name and value'}), 400
             metric['timestamp'] = datetime.utcnow()
-        
+            metric['metadata'] = {"name": metric['name']}
+
         # Insert all metrics at once
         await db.metrics.insert_many(metrics)
         return jsonify({'message': 'Metrics added successfully'}), 201
@@ -44,12 +61,10 @@ async def add_metrics():
         logging.error(f"Error adding metrics: {e}")
         return jsonify({'error': 'Bad Request'}), 400
 
-
-
 '''
-	Metrics average endpoint
-	Arguments required: start date, end date and granularity
-	Returns: An array of averages based on the granularity and available data.
+    Metrics average endpoint
+    Arguments required: start date, end date and granularity
+    Returns: An array of averages based on the granularity and available data.
 '''
 @app.route('/metrics/average', methods=['GET'])
 async def get_average():
@@ -78,7 +93,7 @@ async def get_average():
             'day': {'$dayOfMonth': '$timestamp'},
             'hour': {'$hour': '$timestamp'},
             'minute': {'$minute': '$timestamp'},
-            'name': '$name'
+            'name': '$metadata.name'
         }
     elif granularity == 'hours':
         group_id = {
@@ -86,20 +101,20 @@ async def get_average():
             'month': {'$month': '$timestamp'},
             'day': {'$dayOfMonth': '$timestamp'},
             'hour': {'$hour': '$timestamp'},
-            'name': '$name'
+            'name': '$metadata.name'
         }
     elif granularity == 'days':
         group_id = {
             'year': {'$year': '$timestamp'},
             'month': {'$month': '$timestamp'},
             'day': {'$dayOfMonth': '$timestamp'},
-            'name': '$name'
+            'name': '$metadata.name'
         }
     else:
         return jsonify({'error': 'Invalid granularity parameter'}), 400
 
     pipeline = [
-        {'$match': {'timestamp': {'$gte': start, '$lt': end}, 'name': {'$in': metric_names}}},
+        {'$match': {'timestamp': {'$gte': start, '$lt': end}, 'metadata.name': {'$in': metric_names}}},
         {'$group': {'_id': group_id, 'average': {'$avg': '$value'}}},
         {'$sort': {'_id': 1}}  # Sort by the group_id to maintain chronological order
     ]
@@ -124,19 +139,17 @@ async def get_average():
     return jsonify({'averages': averages})
 
 '''
-	Metrics average endpoint
-	Arguments required: start date, end date and granularity
-	Returns: An array of averages based on the granularity and available data.
+    List available metrics
+    Returns: An array of metric names.
 '''
 @app.route('/metrics/list', methods=['GET'])
 async def list_metrics():
     try:
-        metrics = await db.metrics.distinct('name')
-        return jsonify({'metrics': metrics}), 200
+        metric_names = await db.metrics.distinct('metadata.name')
+        return jsonify({'metrics': metric_names}), 200
     except Exception as e:
         logging.error(f"Error listing metrics: {e}")
         return jsonify({'error': 'Internal Server Error'}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True)

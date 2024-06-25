@@ -17,4 +17,5 @@ EXPOSE 5000
 ENV NAME World
 
 # Run app.py when the container launches
-CMD ["quart", "--app", "main", "run"]
+CMD ["hypercorn", "-b", "0.0.0.0:5000", "main:app"]
+#CMD ["quart", "--app", "main", "run"]
